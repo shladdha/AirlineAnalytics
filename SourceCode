@@ -1,0 +1,398 @@
+install.packages("rjson")
+install.packages("kernlab")
+library(kernlab)
+library(rjson)
+library(jsonlite)
+library(dplyr)
+library(tidyr)
+
+jsonFile <- fromJSON("fall2019-survey-M07.json")
+dataSet <- lapply(jsonFile, function(x) {
+  x[sapply(x, is.null)] <- NA
+  unlist(x)
+})
+
+#Data Cleaning and Wrangling
+ProjectDf<-as.data.frame(do.call("cbind", dataSet), stringsAsFactors = FALSE)
+
+trimws(ProjectDf$Destination.City)
+trimws(ProjectDf$Origin.City)
+trimws(ProjectDf$Airline.Status)
+trimws(ProjectDf$Age)
+trimws(ProjectDf$Gender)
+trimws(ProjectDf$Price.Sensitivity)
+trimws(ProjectDf$Year.of.First.Flight)
+trimws(ProjectDf$Flights.Per.Year)
+trimws(ProjectDf$Loyalty)
+trimws(ProjectDf$olat)
+trimws(ProjectDf$Type.of.Travel)
+trimws(ProjectDf$Total.Freq.Flyer.Accts)
+trimws(ProjectDf$Shopping.Amount.at.Airport)
+trimws(ProjectDf$Eating.and.Drinking.at.Airport)
+trimws(ProjectDf$Class)
+trimws(ProjectDf$Day.of.Month)
+trimws(ProjectDf$Flight.date)
+trimws(ProjectDf$Partner.Code)
+trimws(ProjectDf$Partner.Name)
+trimws(ProjectDf$Origin.State)
+trimws(ProjectDf$Destination.State)
+trimws(ProjectDf$Scheduled.Departure.Hour)
+trimws(ProjectDf$Departure.Delay.in.Minutes)
+trimws(ProjectDf$Arrival.Delay.in.Minutes)
+trimws(ProjectDf$Flight.cancelled)
+trimws(ProjectDf$Flight.time.in.minutes)
+trimws(ProjectDf$Flight.Distance)
+trimws(ProjectDf$Likelihood.to.recommend)
+trimws(ProjectDf$olong)
+trimws(ProjectDf$dlong)
+trimws(ProjectDf$dlat)
+trimws(ProjectDf$freeText)
+
+colnames(ProjectDf)[colnames(ProjectDf)=="Destination.City"]<-"DestinationCity"
+colnames(ProjectDf)[colnames(ProjectDf)=="Origin.City"]<- "OriginCity"
+colnames(ProjectDf)[colnames(ProjectDf)=="Airline.Status"]<- "AirlineStatus"
+colnames(ProjectDf)[colnames(ProjectDf)=="Price.Sensitivity"]<- "PriceSensitivity"
+colnames(ProjectDf)[colnames(ProjectDf)=="Year.of.First.Flight"]<- "YearofFirstFlight"
+colnames(ProjectDf)[colnames(ProjectDf)=="Flights.Per.Year"]<- "FlightsPerYear"
+colnames(ProjectDf)[colnames(ProjectDf)=="Type.of.Travel"]<- "TypeofTravel"
+colnames(ProjectDf)[colnames(ProjectDf)=="Total.Freq.Flyer.Accts"]<- "TotalFreqFlyerAccts"
+colnames(ProjectDf)[colnames(ProjectDf)=="Shopping.Amount.at.Airport"]<- "ShoppingAmountatAirport"
+colnames(ProjectDf)[colnames(ProjectDf)=="Eating.and.Drinking.at.Airport"]<- "EatingAndDrinkingAtAirport"
+colnames(ProjectDf)[colnames(ProjectDf)=="Day.of.Month"]<- "DayOfMonth"
+colnames(ProjectDf)[colnames(ProjectDf)== "Likelihood.to.recommend"]<- "LikelihoodToRecommend"
+colnames(ProjectDf)[colnames(ProjectDf)== "Flight.Distance"]<- "FlightDistance"
+colnames(ProjectDf)[colnames(ProjectDf)== "Flight.time.in.minutes"]<- "FlighttimeInMinutes"
+colnames(ProjectDf)[colnames(ProjectDf)== "Flight.cancelled"]<- "FlightCancelled"
+colnames(ProjectDf)[colnames(ProjectDf)== "Arrival.Delay.in.Minutes"]<- "ArrivalDelayinMinutes"
+colnames(ProjectDf)[colnames(ProjectDf)== "Departure.Delay.in.Minutes"]<- "DepartureDelayinMinutes"
+colnames(ProjectDf)[colnames(ProjectDf)== "Scheduled.Departure.Hour"]<- "ScheduledDepartureHour"
+colnames(ProjectDf)[colnames(ProjectDf)== "Destination.State"]<- "DestinationState"
+colnames(ProjectDf)[colnames(ProjectDf)== "Origin.State"]<- "OriginState"
+colnames(ProjectDf)[colnames(ProjectDf)== "Partner.Name"]<- "PartnerName"
+colnames(ProjectDf)[colnames(ProjectDf)== "Partner.Code"]<- "PartnerCode"
+colnames(ProjectDf)[colnames(ProjectDf)== "Flight.date"]<- "FlightDate"
+colnames(ProjectDf)[colnames(ProjectDf)== "freeText"]<- "Comments"
+ProjectDf<- separate(ProjectDf,col="DestinationCity", into=c("DestcityName", "DestAbbrevation"), sep=",")
+ProjectDf<- separate(ProjectDf,col="OriginCity", into=c("OriginCityName", "OriginAbbrevation"), sep=",")
+
+ProjectDf$Comments<- as.character(ProjectDf$Comments)
+ProjectDf$Comments[is.na(ProjectDf$Comments)]<-"No comments"
+which(is.na(ProjectDf$DestcityName))
+which(is.na(ProjectDf$DestAbbrevation))
+which(is.na(ProjectDf$OriginCityName))
+which(is.na(ProjectDf$OriginAbbrevation))
+which(is.na(ProjectDf$AirlineStatus))
+which(is.na(ProjectDf$Age))
+which(is.na(ProjectDf$Gender))
+which(is.na(ProjectDf$PriceSensitivity))
+which(is.na(ProjectDf$YearofFirstFlight))
+which(is.na(ProjectDf$FlightsPerYear))
+which(is.na(ProjectDf$Loyalty))
+which(is.na(ProjectDf$TypeofTravel))
+which(is.na(ProjectDf$TotalFreqFlyerAccts))
+which(is.na(ProjectDf$ShoppingAmountatAirport))
+which(is.na(ProjectDf$EatingAndDrinkingAtAirport))
+which(is.na(ProjectDf$Class))
+which(is.na(ProjectDf$DayOfMonth))
+which(is.na(ProjectDf$FlightDate))
+which(is.na(ProjectDf$PartnerCode))
+which(is.na(ProjectDf$PartnerName))
+which(is.na(ProjectDf$OriginState))
+which(is.na(ProjectDf$DestinationState))
+which(is.na(ProjectDf$ScheduledDepartureHour))
+ProjectDf[which(is.na(ProjectDf$DepartureDelayinMinutes)),24] <- 0#has NA's
+ProjectDf[which(is.na(ProjectDf$ArrivalDelayinMinutes)),25] <- 0 #has NA's
+which(is.na(ProjectDf$FlightCancelled))
+ProjectDf[which(is.na(ProjectDf$FlighttimeInMinutes)),27] <- 0 #has NA's
+which(is.na(ProjectDf$FlightDistance))
+which(is.na(ProjectDf$LikelihoodToRecommend))
+which(is.na(ProjectDf$olong))
+which(is.na(ProjectDf$olat))
+which(is.na(ProjectDf$dlong))
+which(is.na(ProjectDf$dlat))
+which(is.na(ProjectDf$Comments))
+ProjectDf$LikelihoodToRecommend <- as.integer(ProjectDf$LikelihoodToRecommend)
+ProjectDf$olong <- as.numeric(ProjectDf$olong)
+ProjectDf$olat <- as.numeric(ProjectDf$olat)
+ProjectDf$DepartureDelayinMinutes <- as.integer(ProjectDf$DepartureDelayinMinutes)
+ProjectDf$ArrivalDelayinMinutes <- as.integer(ProjectDf$ArrivalDelayinMinutes)
+
+#SVM modeling
+
+ProjectDf$Emotion <- "Detractor"
+ProjectDf$Emotion[which(ProjectDf$LikelihoodToRecommend > 7)] <- "Promoter"
+
+newdf <- data.frame(ProjectDf$Gender, ProjectDf$DepartureDelayinMinutes, ProjectDf$ArrivalDelayinMinutes, ProjectDf$FlightCancelled, ProjectDf$FlighttimeInMinutes, ltr =ProjectDf$LikelihoodToRecommend)
+newdf$ltr <- as.integer(newdf$ltr)
+newdf$Emotion <- "Detractor"
+newdf$Emotion[which(newdf$ltr > 7)] <- "Promoter"
+
+randIndex <- sample(1:dim(newdf)[1])
+twothird <- floor(2*dim(newdf)[1]/3)
+training_ds <- newdf[randIndex[1:twothird],]
+testing_ds <- newdf[randIndex[(twothird+1):dim(newdf)[1]],]
+
+svmOutput <- ksvm(Emotion ~.,data = newdf, kernel = "rbfdot", kpar = "automatic", C=5, cross = 3, prob.model = TRUE)
+svmOutput
+svmPred <- predict(svmOutput, testing_ds)
+comptable <- table(svmPred == testing_ds[,7])
+comptable
+Accuracy <- (comptable[1]/(comptable[1]+comptable[2]))*100
+Accuracy
+
+#Association Rules Mining
+
+library(jsonlite)
+library(arules)
+json_data <- fromJSON("fall2019-survey-M07.json")
+json_data_frame <- as.data.frame(json_data)
+df<-json_data_frame
+df$Destination.City<-as.factor(df$Destination.City)
+df$Origin.City<-as.factor(df$Origin.City)
+df$Airline.Status<-as.factor(df$Airline.Status)
+df$Age<-as.factor(df$Age)
+df$Gender<-as.factor(df$Gender)
+df$Price.Sensitivity<-as.factor(df$Price.Sensitivity)
+df$Year.of.First.Flight<-as.factor(df$Year.of.First.Flight)
+df$Loyalty<-as.factor(df$Loyalty)
+df$Flights.Per.Year <- discretize(df$Flights.Per.Year)
+df$Likelihood.to.recommend <- discretize(df$Likelihood.to.recommend)
+df$Type.of.Travel<-as.factor(df$Type.of.Travel)
+df$Total.Freq.Flyer.Accts<-as.factor(df$Total.Freq.Flyer.Accts)
+df$Shopping.Amount.at.Airport<-as.factor(df$Shopping.Amount.at.Airport)
+df$Eating.and.Drinking.at.Airport<-as.factor(df$Eating.and.Drinking.at.Airport)
+df$Class<-as.factor(df$Class)
+df$Day.of.Month<-as.factor(df$Day.of.Month)
+df$Flight.date<-as.factor(df$Flight.date)
+df$Partner.Code<-as.factor(df$Partner.Code)
+df$Partner.Name<-as.factor(df$Partner.Name)
+df$Origin.State<-as.factor(df$Origin.State)
+df$Destination.State<-as.factor(df$Destination.State)
+df$Scheduled.Departure.Hour<-as.factor(df$Scheduled.Departure.Hour)
+df$Departure.Delay.in.Minutes<-as.factor(df$Departure.Delay.in.Minutes)
+df$Arrival.Delay.in.Minutes<-as.factor(df$Arrival.Delay.in.Minutes)
+df$Flight.cancelled<-as.factor(df$Flight.cancelled)
+df$Flight.time.in.minutes<-as.factor(df$Flight.time.in.minutes)
+df$Flight.Distance<-as.factor(df$Flight.Distance)
+df$Flight.time.in.minutes<-as.factor(df$Flight.time.in.minutes)
+df$Likelihood.to.recommend<-as.factor(df$Likelihood.to.recommend)
+df$olong<-as.factor(df$olong)
+df$olat<-as.factor(df$olat)
+df$dlong<-as.factor(df$dlat)
+df$freeText<-as.factor(df$freeText)
+df$dlat<-as.factor(df$dlat)
+
+df<-as(df,"transactions")
+
+library(arules)
+library(arulesViz)
+
+ruleset <- apriori(df,parameter = list(supp=0.008, conf=0.9),appearance = list(rhs=c("Likelihood.to.recommend=[8,10]"),default="lhs"),control = list(verbose=F))
+ruleset<-sort(ruleset,decreasing = TRUE,by="lift")
+summary(ruleset)
+plot(ruleset,jitter=0)
+inspect(ruleset)
+rules<- subset(ruleset,subset= rhs %in% "Likelihood.to.recommend=[8,10]")
+rules
+plot(rules, method="paracoord", control=list(reorder=TRUE))
+
+#Text Mining on Comments
+
+install.packages("tm")
+library(tm)
+
+posWords <- scan("positive-words.txt", character(0), sep = "\n")
+negWords <- scan("negative-words.txt", character(0), sep = "\n")
+posWords <- posWords[-1:-34]
+negWords <- negWords[-1:-34]
+
+ProjectDf$CommentType <- ""
+for(i in 10001:dim(ProjectDf[1])){
+  charVector <- ProjectDf$Comments[i]
+  words.vector <- VectorSource(charVector)
+  words.corpus <- Corpus(words.vector)
+  words.corpus <- tm_map(words.corpus,content_transformer(tolower))
+  words.corpus <- tm_map(words.corpus, removePunctuation)
+  words.corpus <- tm_map(words.corpus, removeNumbers)
+  words.corpus <- tm_map(words.corpus, removeWords, stopwords("english"))
+  tdm <- TermDocumentMatrix(words.corpus)
+  m <- as.matrix(tdm)
+  wordCounts <- rowSums(m)
+  matchedP <- match(names(wordCounts), posWords, nomatch = 0) 
+  matchedN <- match(names(wordCounts), negWords, nomatch = 0) 
+  if (sum(matchedN != 0) > sum(matchedP != 0)){
+    ProjectDf$CommentType[i] <- "Negative"
+  }else {
+    ProjectDf$CommentType[i] <- "Positive"
+  }
+  if (sum(matchedN != 0) == sum(matchedP != 0)){
+    ProjectDf$CommentType[i] <- "Neutral"
+  }
+}
+View(ProjectDf)
+table(ProjectDf$CommentType)
+positive_percentage <- (table(ProjectDf$CommentType)[4]/sum(table(ProjectDf$CommentType)))*100
+positive_percentage
+negative_percentage <- (table(ProjectDf$CommentType)[2]/sum(table(ProjectDf$CommentType)))*100
+negative_percentage
+neutral_percentage <- (table(ProjectDf$CommentType)[3]/sum(table(ProjectDf$CommentType)))*100
+neutral_percentage
+ggplot(filter(ProjectDf,CommentType != ""), aes(x = CommentType))+geom_bar(position = "dodge")
+
+
+#Plots
+#1
+
+ProjectDf1 <- ProjectDf
+ProjectDf1 <- group_by(ProjectDf1, OriginState) %>%
+  summarise(meanLTR = mean(LikelihoodToRecommend))
+ProjectDf1$OriginState <- tolower(ProjectDf1$OriginState)
+ProjectDf1$state <-  ProjectDf1$OriginState
+ProjectDf1$OriginState <- c()
+us <- map_data('state')
+us <- filter(us, region != "west virginia")
+ProjectDf1$lat <- unique(us$lat)
+dummydf <- data.frame(state.name, stringsAsFactors = FALSE)
+dummydf$state <- tolower(dummydf$state.name)
+map_averages <- ggplot(filter(ProjectDf1, meanLTR < 7), aes(map_id = state)) +
+  geom_map(map=us, aes(fill = meanLTR), color = "white")+
+  expand_limits(x=us$long, y = us$lat) +
+  coord_map() + ggtitle("US States with lesser average LTR (<7)")
+map_averages
+
+#2
+airlineLTRdf <-ProjectDf %>% 
+  group_by(PartnerName) %>%
+  summarise(airlineLTR=mean(LikelihoodToRecommend))
+airlineLTRdf$airlineLTR <- sort(airlineLTRdf$airlineLTR, decreasing = TRUE)
+airlineLTRplot <- ggplot(airlineLTRdf) +
+  geom_col(mapping = aes(x = PartnerName, y = airlineLTR)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  labs(x = "Partner Name", y="Mean LTR") 
+airlineLTRplot
+
+#3
+ProjectDf$AgeGroup<-ifelse(ProjectDf$Age<=30,'Young',ifelse(ProjectDf$Age<=60,'Middle Age','Old'))
+agegroupDf<-ProjectDf %>% 
+  group_by(AgeGroup,Gender, AirlineStatus) %>% 
+  summarise(AgeGroupLTR=mean(LikelihoodToRecommend))
+ggplot(data = agegroupDf) +
+  geom_col(
+    mapping = aes(x = AgeGroup, fill = Gender, y = AgeGroupLTR),
+    position = "dodge"
+  )
+
+#4
+ProjectDf$Loyalty <- as.numeric(ProjectDf$Loyalty)
+loyaltyDF <- ProjectDf %>%
+  group_by(PartnerName) %>%
+  summarise(meanLty = mean(Loyalty))
+loyaltyDF$meanLty <- sort(loyaltyDF$meanLty, decreasing = TRUE)
+loyaltyDFPlot <- ggplot(loyaltyDF) +
+  geom_col(mapping = aes(x = PartnerName, y = meanLty)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  labs(x = "Partner Name", y="Mean Loyalty")
+loyaltyDFPlot
+
+#5
+B = tapply(ProjectDf$LikelihoodToRecommend, ProjectDf$PartnerName, length)
+noofentries <- data.frame(No_of_Entries = B, Airline_name = row.names(B))
+
+barp1 <- ggplot(noofentries, aes(x=reorder(Airline_name,No_of_Entries), y=No_of_Entries))
+barp1 <- barp1 + geom_col(color = "Black", fill = "black")
+barp1 <- barp1 + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+barp1 <- barp1 + ggtitle("Number of passengers for each airline")
+barp1 <- barp1 + labs(x = "Airlines")
+barp1 <- barp1 + labs(y = "Number of passengeres")
+barp1
+
+#6
+ggplot(filter(ProjectDf,CommentType != ""), aes(x = CommentType))+geom_bar(position = "dodge")
+
+#7
+travelLTR <- group_by(ProjectDf, TypeofTravel) %>%
+  summarise(meanLTR = mean(LikelihoodToRecommend))
+ggplot(ProjectDf)+
+  stat_count(aes(x=TypeofTravel))
+travelLTR$meanLTR <- sort(travelLTR$meanLTR, decreasing = TRUE)
+travelplot <- ggplot(travelLTR) +
+  geom_col(mapping = aes(x = TypeofTravel, y = meanLTR)) +
+  labs(x = " Travel Type", y="Mean LTR")
+travelplot
+
+#Correlation Analysis
+
+install.packages("Hmisc")
+library(Hmisc)
+install.packages("corrplot")
+library(corrplot)
+install.packages("PerformanceAnalytics")
+library(PerformanceAnalytics)
+
+df_numeric <- data.frame(ProjectDf$Age, ProjectDf$PriceSensitivity, ProjectDf$YearofFirstFlight, ProjectDf$FlightsPerYear, ProjectDf$Loyalty, ProjectDf$TotalFreqFlyerAccts, ProjectDf$ShoppingAmountatAirport, ProjectDf$EatingAndDrinkingAtAirport, ProjectDf$DayOfMonth, ProjectDf$ScheduledDepartureHour, ProjectDf$DepartureDelayinMinutes, ProjectDf$ArrivalDelayinMinutes, ProjectDf$FlighttimeInMinutes, ProjectDf$FlightDistance, ProjectDf$LikelihoodToRecommend, stringsAsFactors = FALSE)
+df_numeric$ProjectDf.Age <- as.numeric(df_numeric$ProjectDf.Age)
+df_numeric$ProjectDf.PriceSensitivity <- as.numeric(df_numeric$ProjectDf.PriceSensitivity)
+df_numeric$ProjectDf.YearofFirstFlight <- as.numeric(df_numeric$ProjectDf.YearofFirstFlight)
+df_numeric$ProjectDf.FlightsPerYear <- as.numeric(df_numeric$ProjectDf.FlightsPerYear)
+df_numeric$ProjectDf.Loyalty <- as.numeric(df_numeric$ProjectDf.Loyalty)
+df_numeric$ProjectDf.TotalFreqFlyerAccts <- as.numeric(df_numeric$ProjectDf.TotalFreqFlyerAccts)
+df_numeric$ProjectDf.ShoppingAmountatAirport <- as.numeric(df_numeric$ProjectDf.ShoppingAmountatAirport)
+df_numeric$ProjectDf.EatingAndDrinkingAtAirport <- as.numeric(df_numeric$ProjectDf.EatingAndDrinkingAtAirport)
+df_numeric$ProjectDf.DayOfMonth <- as.numeric(df_numeric$ProjectDf.DayOfMonth)
+df_numeric$ProjectDf.ScheduledDepartureHour <- as.numeric(df_numeric$ProjectDf.ScheduledDepartureHour)
+df_numeric$ProjectDf.DepartureDelayinMinutes <- as.numeric(df_numeric$ProjectDf.DepartureDelayinMinutes)
+df_numeric$ProjectDf.ArrivalDelayinMinutes <- as.numeric(df_numeric$ProjectDf.ArrivalDelayinMinutes)
+df_numeric$ProjectDf.FlighttimeInMinutes <- as.numeric(df_numeric$ProjectDf.FlighttimeInMinutes)
+df_numeric$ProjectDf.FlightDistance <- as.numeric(df_numeric$ProjectDf.FlightDistance)
+df_numeric$ProjectDf.LikelihoodToRecommend <- as.numeric(df_numeric$ProjectDf.LikelihoodToRecommend)
+
+correlation <- cor(df_numeric, method = c("pearson", "kendall", "spearman"))
+round(correlation, 2)
+
+correlation2 <- rcorr(as.matrix(df_numeric))
+correlation2$r
+correlation2$P
+
+corrplot(correlation, type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+corrplot(correlation2$r , type = "upper", order = "hclust", p.mat = correlation2$P, sig.level = 0.01, insig = "blank")
+
+chart.Correlation(df_numeric, histogram = TRUE, pch = 19)
+
+col<- colorRampPalette(c("blue", "white", "red"))(20)
+heatmap(x = correlation, col = col, symm = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
